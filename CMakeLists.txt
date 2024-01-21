@@ -9,6 +9,8 @@ set(OUTPUT ${ROOT}/build/Debug)
 
 add_executable(${PROJECT_NAME} source/main.cpp)
 
+############################################################################
+# SDL2
 set(SDL2_INCLUDE_DIRS
     ${ROOT}/external/SDL2_image-2.8.2/include
     ${ROOT}/external/SDL2-2.28.5/include)
@@ -21,9 +23,36 @@ set(SDL2_LIBRARIES
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE external/entt/src)
-
-message(${OUTPUT})
-
 file(COPY ${ROOT}/external/SDL2_image-2.8.2/lib/x64/SDL2_image.dll DESTINATION ${ROOT})
 file(COPY ${ROOT}/external/SDL2-2.28.5/lib/x64/SDL2.dll DESTINATION ${ROOT})
+
+############################################################################
+# ENTT
+set(ENTT_INCLUDE_DIRS
+    ${ROOT}/externals/entt/src)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${ENTT_INCLUDE_DIRS})
+
+############################################################################
+# IMGUI
+set(IMGUI_PATH ${ROOT}/external/imgui-v1.90.1)
+
+set(IMGUI_INCLUDE_DIRS
+    ${IMGUI_PATH})
+
+set(IMGUI_SOURCES
+    ${IMGUI_PATH}/imgui.cpp
+    ${IMGUI_PATH}/imgui_demo.cpp
+    ${IMGUI_PATH}/imgui_draw.cpp
+    ${IMGUI_PATH}/imgui_tables.cpp
+    ${IMGUI_PATH}/imgui_widgets.cpp
+    ${IMGUI_PATH}/backends/imgui_impl_sdlrenderer2.cpp
+    ${IMGUI_PATH}/backends/imgui_impl_sdl2.cpp)
+
+add_library(IMGUI ${IMGUI_SOURCES})
+target_include_directories(IMGUI PRIVATE 
+    ${IMGUI_PATH}
+    ${SDL2_INCLUDE_DIRS})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE IMGUI)
