@@ -2,12 +2,12 @@
 and may not be redistributed without written permission.*/
 
 //Using SDL and standard IO
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_render.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_image.h>
+#include <SDL3/SDL_render.h>
 #include <imgui.h>
-#include <backends/imgui_impl_sdl2.h>
-#include <backends/imgui_impl_sdlrenderer2.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdlrenderer3.h>
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -194,11 +194,11 @@ Particles createParticles(int count) {
 
 void drawParticle(float x, float y, int size, int color) {
 	const float offset = size / 2;
-	SDL_Rect dst{ .x = static_cast<int>(x - offset), .y = static_cast<int>(y - offset), .w = size, .h = size };
+	SDL_FRect dst{ .x = static_cast<float>(x - offset), .y = static_cast<float>(y - offset), .w = static_cast<float>(size), .h = static_cast<float>(size) };
 
 	const Rgb rgb = rgbs[color];
 	SDL_SetTextureColorMod(gSpriteTexture, static_cast<char>(255 * rgb.r), static_cast<char>(255 * rgb.g), static_cast<char>(255 * rgb.b));
-	SDL_RenderCopy(gRenderer, gSpriteTexture, nullptr, &dst);
+	SDL_RenderTexture(gRenderer, gSpriteTexture, nullptr, &dst);
 }
 
 void updatePosition(Particle& p, float dt) {
@@ -270,15 +270,15 @@ bool init()
 	}
 
     //Create window
-	const int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN;
-    gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags );
+	const int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+    gWindow = SDL_CreateWindow( "SDL Tutorial", SCREEN_WIDTH, SCREEN_HEIGHT, window_flags );
     if( gWindow == nullptr )
     {
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         return false;
     }
 
-    gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED );
+    gRenderer = SDL_CreateRenderer( gWindow, nullptr, SDL_RENDERER_ACCELERATED );
     if( gRenderer == NULL )
     {
         printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -301,7 +301,7 @@ void close()
     gSpriteTexture = nullptr;
 
 	//Deallocate surface
-	SDL_FreeSurface( gXOut );
+	SDL_DestroySurface( gXOut );
 	gXOut = nullptr;
 
     SDL_DestroyRenderer( gRenderer );
@@ -418,8 +418,8 @@ int main( int argc, char* args[] )
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		ImGui::StyleColorsDark();
 
-		ImGui_ImplSDL2_InitForSDLRenderer(gWindow, gRenderer);
-		ImGui_ImplSDLRenderer2_Init(gRenderer);
+		ImGui_ImplSDL3_InitForSDLRenderer(gWindow, gRenderer);
+		ImGui_ImplSDLRenderer3_Init(gRenderer);
 
 		//Main loop flag
 		bool quit = false;
@@ -437,12 +437,12 @@ int main( int argc, char* args[] )
 			//Handle events on queue
 			while( SDL_PollEvent( &e ) != 0 )
 			{
-				ImGui_ImplSDL2_ProcessEvent(&e);
+				ImGui_ImplSDL3_ProcessEvent(&e);
 				if (io.WantCaptureMouse)
 				{
 					continue;
 				}
-				if (e.type == SDL_KEYDOWN) {
+				if (e.type == SDL_EVENT_KEY_DOWN) {
 					switch (e.key.keysym.sym)
 					{
 					case SDLK_ESCAPE: 
@@ -462,7 +462,7 @@ int main( int argc, char* args[] )
 						clearParticles();
 						break;
 					}
-				} else if (e.type == SDL_MOUSEBUTTONDOWN)
+				} else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 				{
 					if (e.button.button == 1) {
 						const int mx = e.motion.x;
@@ -473,13 +473,13 @@ int main( int argc, char* args[] )
 					{
 						rmb = true;
 					}
-				} else if (e.type == SDL_MOUSEBUTTONUP)
+				} else if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
 				{
 					if (e.button.button == 3)
 					{
 						rmb = false;
 					}
-				} else if (e.type == SDL_MOUSEMOTION)
+				} else if (e.type == SDL_EVENT_MOUSE_MOTION)
 				{
 					if (rmb) {
 						const int mx = e.motion.x;
@@ -490,8 +490,8 @@ int main( int argc, char* args[] )
 				}
 			}
 
-			ImGui_ImplSDLRenderer2_NewFrame();
-			ImGui_ImplSDL2_NewFrame();
+			ImGui_ImplSDLRenderer3_NewFrame();
+			ImGui_ImplSDL3_NewFrame();
 			ImGui::NewFrame();
 
             ImGui::Begin("Particles!");									 // Create a window called "Hello, world!" and append into it.
@@ -552,19 +552,19 @@ int main( int argc, char* args[] )
 			//Clear screen
 			ImGui::Render();
 
-			SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+			SDL_SetRenderScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
 			SDL_SetRenderDrawColor(gRenderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
 			SDL_RenderClear(gRenderer);
 
 			loop();
 
-			ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+			ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 		}
 	}
 
-    ImGui_ImplSDLRenderer2_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();	
 
 	//Free resources and close SDL

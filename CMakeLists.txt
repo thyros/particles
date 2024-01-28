@@ -11,20 +11,18 @@ add_executable(${PROJECT_NAME} source/main.cpp)
 
 ############################################################################
 # SDL2
-set(SDL2_INCLUDE_DIRS
-    ${ROOT}/external/SDL2_image-2.8.2/include
-    ${ROOT}/external/SDL2-2.28.5/include)
+set(SDL3_INCLUDE_DIRS
+    ${ROOT}/external/SDL3/include)
 
-set(SDL2_LIBRARIES
-    ${ROOT}/external/SDL2_image-2.8.2/lib/x64/SDL2_image.lib
-    ${ROOT}/external/SDL2-2.28.5/lib/x64/SDL2main.lib
-    ${ROOT}/external/SDL2-2.28.5/lib/x64/SDL2.lib)
+set(SDL3_LIBRARIES
+    ${ROOT}/external/SDL3/lib/SDL3.lib
+    ${ROOT}/external/SDL3/lib/SDL3_image.lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL3_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL3_LIBRARIES})
 
-file(COPY ${ROOT}/external/SDL2_image-2.8.2/lib/x64/SDL2_image.dll DESTINATION ${ROOT})
-file(COPY ${ROOT}/external/SDL2-2.28.5/lib/x64/SDL2.dll DESTINATION ${ROOT})
+file(COPY ${ROOT}/external/SDL3/bin/SDL3.dll DESTINATION ${ROOT})
+file(COPY ${ROOT}/external/SDL3/bin/SDL3_image.dll DESTINATION ${ROOT})
 
 ############################################################################
 # ENTT
@@ -46,13 +44,13 @@ set(IMGUI_SOURCES
     ${IMGUI_PATH}/imgui_draw.cpp
     ${IMGUI_PATH}/imgui_tables.cpp
     ${IMGUI_PATH}/imgui_widgets.cpp
-    ${IMGUI_PATH}/backends/imgui_impl_sdlrenderer2.cpp
-    ${IMGUI_PATH}/backends/imgui_impl_sdl2.cpp)
+    ${IMGUI_PATH}/backends/imgui_impl_sdlrenderer3.cpp
+    ${IMGUI_PATH}/backends/imgui_impl_sdl3.cpp)
 
 add_library(IMGUI ${IMGUI_SOURCES})
 target_include_directories(IMGUI PRIVATE 
     ${IMGUI_PATH}
-    ${SDL2_INCLUDE_DIRS})
+    ${SDL3_INCLUDE_DIRS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE IMGUI)
