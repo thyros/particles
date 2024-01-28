@@ -33,7 +33,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${ENTT_INCLUDE_DIRS})
 
 ############################################################################
 # IMGUI
-set(IMGUI_PATH ${ROOT}/external/imgui-v1.90.1)
+set(IMGUI_PATH ${ROOT}/external/imgui)
 
 set(IMGUI_INCLUDE_DIRS
     ${IMGUI_PATH})
