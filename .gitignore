@@ -2,8 +2,8 @@
 /build/
 
 # Copied
-SDL3.dll
-SDL3_image.dll
+/SDL3.dll
+/SDL3_image.dll
 
 # Runtime
 imgui.ini
