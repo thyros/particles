@@ -8,6 +8,8 @@ set(ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(OUTPUT ${ROOT}/build/Debug)
 
 add_executable(${PROJECT_NAME} source/main.cpp)
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${ROOT}")
+set_property( DIRECTORY PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}" )
 
 ############################################################################
 # SDL2
