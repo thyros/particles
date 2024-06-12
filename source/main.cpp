@@ -4,7 +4,7 @@ and may not be redistributed without written permission.*/
 #include "Math.h"
 #include "IApp.h"
 #include "State.h"
-#include <cassert>
+#include <SDL3/SDL_main.h>
 
 constexpr int SCREEN_WIDTH = 1280;
 constexpr int SCREEN_HEIGHT = 960;
@@ -64,7 +64,7 @@ ParticleColors generateRandomColors(const int c)
 
 ///////////////////////////////////////////////////////////////
 
-int main()
+int main(int argc, char **argv)
 {
 	State state;
 	state.colorsCount = 5;
