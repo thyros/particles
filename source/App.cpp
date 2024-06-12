@@ -44,6 +44,9 @@ std::unique_ptr<IApp> CreateApp(State& state, int16_t width, int16_t height)
 	}
 	SDL_Texture* spriteTexture = SDL_CreateTextureFromSurface(renderer, surface);
 
+	Uint32 format;
+	SDL_QueryTexture(spriteTexture, &format, nullptr, nullptr, nullptr);
+
 	// ####################################
 	// ## IMGUI
 	IMGUI_CHECKVERSION();
@@ -116,6 +119,9 @@ bool App::Update()
 		{
 			continue;
 		}
+		if (e.type == SDL_EVENT_QUIT) {
+			return true;
+		}
 		if (e.type == SDL_EVENT_KEY_DOWN) {
 			switch (e.key.keysym.sym)
 			{
@@ -173,25 +179,21 @@ bool App::Update()
 
 void App::Render()
 {
-	const ImGuiIO& io = ImGui::GetIO();
+	constexpr ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
+	SDL_SetRenderDrawColor(mRenderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+	SDL_RenderClear(mRenderer);
+
+	// const ImGuiIO& io = ImGui::GetIO();
+	// SDL_SetRenderScale(mRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+
+	UpdateParticles();
 
 	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-
-
-	//Clear screen
 	RenderState(mState, mCurrentColor);
 	ImGui::Render();
-
-	SDL_SetRenderScale(mRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-
-	constexpr ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
-	SDL_SetRenderDrawColor(mRenderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
-	SDL_RenderClear(mRenderer);
-
-	UpdateParticles();
 
 	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
 	SDL_RenderPresent(mRenderer);
