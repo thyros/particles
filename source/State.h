@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Math.h"
 #include <cassert>
 #include <cmath>
 #include <vector>
@@ -24,8 +24,7 @@ inline Rgb ToRgb(int r_, int g_, int b_)
 using ParticleColors = std::vector<Rgb>;
 using Matrix = std::vector<std::vector<float>>;
 
-struct State
-{
+struct Config {
 	int colorsCount = 5;
 	ParticleColors particleColors;
 
@@ -37,7 +36,10 @@ struct State
 	int particleSize = 4.0f;
 
 	Matrix matrix;
+};
 
+struct State
+{
 	std::vector<int> colors;
 	std::vector<float> posX;
 	std::vector<float> posY;
@@ -53,3 +55,4 @@ inline Rgb lerp(const Rgb &lhs, const Rgb &rhs, float t)
 	const float b = (1.0f - t) * lhs.b + t * rhs.b;
 	return Rgb{.r = r, .g = g, .b = b};
 }
+

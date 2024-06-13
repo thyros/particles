@@ -10,27 +10,34 @@ struct SDL_Texture;
 class App : public IApp
 {
 public:
-	App(State& state, int16_t width, int16_t height, SDL_Window* window,
+	App(Config& config, State& state, int16_t width, int16_t height, SDL_Window* window,
 		SDL_Renderer* renderer,
 		SDL_Surface* surface,
 		SDL_Texture* spriteTexture);
 
 	~App() override;
 
-	bool Update() override;
-	void Render() override;
-
-	void DrawParticle(float x, float y, int size, int color) override;
+	void Run() override;
 
 private:
+	bool Update();
+	void Render();
+
+	void DrawParticle(float x, float y, int size, int color);
+
 	void AddParticle(const float x, const float y, const int c) const;
 	void ClearParticles() const;
 	void UpdateParticles();
 	float Force(float r, float a, float beta = 0.3f);
 
-	static void RenderState(State& state, int& currentColor);
+	static void RenderState(const State&);
+	static void RenderConfig(Config&, int& currentColor);
 
+	Config& mConfig;
 	State& mState;
+
+	int mFramesCount = 0;
+	int mLastMeasurement = 0;
 	int mCurrentColor = 0;
 
 	int16_t mWidth = 0;

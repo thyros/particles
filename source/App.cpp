@@ -11,8 +11,9 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
+#include <format>
 
-std::unique_ptr<IApp> CreateApp(State& state, int16_t width, int16_t height)
+std::unique_ptr<IApp> CreateApp(Config& config, State& state, int16_t width, int16_t height)
 {
 	// ####################################
 	// ## SDL
@@ -60,21 +61,12 @@ std::unique_ptr<IApp> CreateApp(State& state, int16_t width, int16_t height)
 	ImGui_ImplSDLRenderer3_Init(renderer);
 
 
-	return std::make_unique<App>(state, width, height, window, renderer, surface, spriteTexture);
+	return std::make_unique<App>(config, state, width, height, window, renderer, surface, spriteTexture);
 }
 
-App::App(State& state, int16_t width, int16_t height, SDL_Window* window, SDL_Renderer* renderer, SDL_Surface* surface,
-	SDL_Texture* spriteTexture) : mState(state), mWidth(width), mHeight(height), mWindow(window), mRenderer(renderer), mSurface(surface), mSpriteTexture(spriteTexture)
-{
-	constexpr int initParticleCount = 50;
-	for (int i = 0; i < initParticleCount; ++i) {
-		mState.colors.push_back(rand() % mState.colorsCount);
-		mState.posX.push_back(frand());
-		mState.posY.push_back(frand());
-		mState.velX.push_back(0);
-		mState.velY.push_back(0);
-	}
-}
+App::App(Config& config, State& state, int16_t width, int16_t height, SDL_Window* window, SDL_Renderer* renderer, SDL_Surface* surface,
+	SDL_Texture* spriteTexture) : mConfig(config), mState(state), mWidth(width), mHeight(height), mWindow(window), mRenderer(renderer), mSurface(surface), mSpriteTexture(spriteTexture)
+{}
 
 App::~App()
 {
@@ -104,8 +96,35 @@ App::~App()
 	SDL_Quit();
 }
 
+void App::Run()
+{
+	constexpr int Second = 1000;
+
+	bool quit = false;
+	mLastMeasurement = SDL_GetTicks();
+
+	while (!quit)
+	{
+		++mFramesCount;
+	
+		const auto now = SDL_GetTicks();
+		if (now - mLastMeasurement > Second) {	
+			const std::string title = std::format("Particles: {} FPS: {}", mState.colors.size(), mFramesCount);
+			SDL_SetWindowTitle(mWindow, title.c_str());
+
+			mLastMeasurement = now;
+			mFramesCount = 0;
+		}
+
+		quit = Update();
+		Render();
+	}
+}
+
 bool App::Update()
 {
+	SDL_GetTicks();
+
 	// TODO: RSTA Remove rmb
 	static bool rmb = false;
 
@@ -173,7 +192,6 @@ bool App::Update()
 		}
 	}
 
-
 	return false;
 }
 
@@ -192,7 +210,11 @@ void App::Render()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	RenderState(mState, mCurrentColor);
+	ImGui::Begin("Particles!");									 // Create a window called "Hello, world!" and append into it.
+	RenderState(mState);
+	RenderConfig(mConfig, mCurrentColor);
+	ImGui::End();
+
 	ImGui::Render();
 
 	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
@@ -206,7 +228,7 @@ void App::DrawParticle(float x, float y, int size, int color)
 	const float offset = size / 2;
 	SDL_FRect dst{ .x = x - offset, .y = y - offset, .w = static_cast<float>(size), .h = static_cast<float>(size) };
 
-	const Rgb rgb = mState.particleColors[color];
+	const Rgb rgb = mConfig.particleColors[color];
 	SDL_SetTextureColorMod(mSpriteTexture, static_cast<char>(255 * rgb.r), static_cast<char>(255 * rgb.g), static_cast<char>(255 * rgb.b));
 	SDL_RenderTexture(mRenderer, mSpriteTexture, nullptr, &dst);
 }
@@ -262,28 +284,28 @@ void App::UpdateParticles()
 			}
 
 			const float r = Vec{ .x = rx, .y = ry }.magnitude();
-			if (r > 0 && r < mState.rMax) {
-				const float f = Force(r / mState.rMax, mState.matrix[mState.colors[i]][mState.colors[j]]);
+			if (r > 0 && r < mConfig.rMax) {
+				const float f = Force(r / mConfig.rMax, mConfig.matrix[mState.colors[i]][mState.colors[j]]);
 				totalForceX += rx / r * f;
 				totalForceY += ry / r * f;
 			}
 		}
 
-		totalForceX *= mState.rMax * mState.forceFactor;
-		totalForceY *= mState.rMax * mState.forceFactor;
+		totalForceX *= mConfig.rMax * mConfig.forceFactor;
+		totalForceY *= mConfig.rMax * mConfig.forceFactor;
 
-		mState.velX[i] *= mState.frictionFactor;
-		mState.velY[i] *= mState.frictionFactor;
+		mState.velX[i] *= mConfig.frictionFactor;
+		mState.velY[i] *= mConfig.frictionFactor;
 
-		mState.velX[i] += totalForceX * mState.dt;
-		mState.velY[i] += totalForceY * mState.dt;
+		mState.velX[i] += totalForceX * mConfig.dt;
+		mState.velY[i] += totalForceY * mConfig.dt;
 	}
 
 
 	// update positions
 	for (size_t i = 0; i < count; ++i) {
-		mState.posX[i] += mState.velX[i] * mState.dt;
-		mState.posY[i] += mState.velY[i] * mState.dt;
+		mState.posX[i] += mState.velX[i] * mConfig.dt;
+		mState.posY[i] += mState.velY[i] * mConfig.dt;
 		mState.posX[i] = warp(mState.posX[i]);
 		mState.posY[i] = warp(mState.posY[i]);
 	}
@@ -293,7 +315,7 @@ void App::UpdateParticles()
 		const float screenX = mState.posX[i] * mWidth;
 		const float screenY = mState.posY[i] * mHeight;
 
-		DrawParticle(screenX, screenY, mState.particleSize, mState.colors[i]);
+		DrawParticle(screenX, screenY, mConfig.particleSize, mState.colors[i]);
 	}
 }
 
@@ -307,33 +329,57 @@ float App::Force(float r, float a, float beta) {
 	return 0;
 }
 
-void App::RenderState(State& state, int& currentColor)
-{
-	ImGui::Begin("Particles!");									 // Create a window called "Hello, world!" and append into it.
+void App::RenderState(const State& state) {
 	ImGui::Text("Particles: %zu", state.colors.size());
+}
+
+void App::RenderConfig(Config& config, int& currentColor)
+{
+	constexpr ImVec2 colorBoxSize(25.0f, 25.0f);
+
 	ImGui::Text("Current Color: %i", currentColor + 1);               // Display some text (you can use a format strings too)
 
-	for (size_t i = 0; i < state.colorsCount; ++i)
+	// Particle colors
+	for (size_t i = 0; i < config.colorsCount; ++i)
 	{
 		ImGuiColorEditFlags misc_flags = 0;
-		float color[3]{ state.particleColors[i].r, state.particleColors[i].g, state.particleColors[i].b };
+		float color[3]{ config.particleColors[i].r, config.particleColors[i].g, config.particleColors[i].b };
 		std::string id = "Color " + std::to_string(i + 1);
 		ImGui::ColorEdit3(id.c_str(), (float*)&color, misc_flags);
-		state.particleColors[i].r = color[0];
-		state.particleColors[i].g = color[1];
-		state.particleColors[i].b = color[2];
+		config.particleColors[i].r = color[0];
+		config.particleColors[i].g = color[1];
+		config.particleColors[i].b = color[2];
+	}
+
+	// Matrix
+	for (int x = 0; x < config.colorsCount; ++x) {
+		if (x > 0) ImGui::SameLine();
+		
+		// Adding invisible button to let ImGui deal with button coordinates
+		if (ImGui::InvisibleButton("##canvas", colorBoxSize)) {
+		}
+
+		if (!ImGui::IsItemVisible()) // Skip rendering as ImDrawList elements are not clipped.
+			continue;
+
+		const ImVec2 p0 = ImGui::GetItemRectMin();
+		const ImVec2 p1 = ImGui::GetItemRectMax();
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		draw_list->PushClipRect(p0, p1, true);
+
+		const Rgb rgb = config.particleColors[x];
+		draw_list->AddRectFilled(p0, p1, IM_COL32(rgb.r * 255, rgb.g * 255, rgb.b * 255, 255));
+		draw_list->PopClipRect();
 	}
 
 	static int lastSelectedX = 0;
 	static int lastSelectedY = 0;
-	for (int y = 0; y < state.colorsCount; ++y)
-	{
-		constexpr ImVec2 size(25.0f, 25.0f);
-		for (int x = 0; x < state.colorsCount; ++x)
+	for (int y = 0; y < config.colorsCount; ++y)
+	{		
+		for (int x = 0; x < config.colorsCount; ++x)
 		{
-			if (x > 0) ImGui::SameLine();
 			ImGui::PushID(y * 10 + x);
-			if (ImGui::InvisibleButton("##canvas", size)) {
+			if (ImGui::InvisibleButton("##canvas", colorBoxSize)) {
 				lastSelectedX = x;
 				lastSelectedY = y;
 			}
@@ -346,18 +392,35 @@ void App::RenderState(State& state, int& currentColor)
 			ImDrawList* draw_list = ImGui::GetWindowDrawList();
 			draw_list->PushClipRect(p0, p1, true);
 
-			const float f = state.matrix[y][x];
+			const float f = config.matrix[y][x];
 			const Rgb rgb = lerp(Rgb{ 1, 0, 0 }, Rgb{ 0, 1, 0 }, f);
 			draw_list->AddRectFilled(p0, p1, IM_COL32((rgb.r + 1) / 2 * 255, (rgb.g + 1) / 2 * 255, (rgb.b + 1) / 2 * 255, 255));
 			draw_list->PopClipRect();
+
+			ImGui::SameLine();
 		}
+
+		// Adding invisible button to let ImGui deal with button coordinates
+		if (ImGui::InvisibleButton("##canvas", colorBoxSize)) {
+		}
+
+		if (!ImGui::IsItemVisible()) // Skip rendering as ImDrawList elements are not clipped.
+			continue;
+
+		const ImVec2 p0 = ImGui::GetItemRectMin();
+		const ImVec2 p1 = ImGui::GetItemRectMax();
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		draw_list->PushClipRect(p0, p1, true);
+
+		const Rgb rgb = config.particleColors[y];
+		draw_list->AddRectFilled(p0, p1, IM_COL32(rgb.r * 255, rgb.g * 255, rgb.b * 255, 255));
+		draw_list->PopClipRect();		
 	}
 
-	ImGui::SliderFloat("matrix", &state.matrix[lastSelectedY][lastSelectedX], -1.0f, 1.0f);
-	ImGui::SliderFloat("rMax", &state.rMax, 0.01f, 1.0f);
-	ImGui::SliderInt("size", &state.particleSize, 2, 20);
 
+	ImGui::SliderFloat("matrix", &config.matrix[lastSelectedY][lastSelectedX], -1.0f, 1.0f);
 
-
-	ImGui::End();
+	ImGui::Separator();
+	ImGui::SliderFloat("rMax", &config.rMax, 0.01f, 1.0f);
+	ImGui::SliderInt("size", &config.particleSize, 2, 20);
 }
