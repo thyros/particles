@@ -1,6 +1,8 @@
 #pragma once
+#include "Config.h"
 #include "State.h"
 #include <memory>
+#include <cstdint>
 
 class IApp
 {

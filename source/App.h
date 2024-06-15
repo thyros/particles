@@ -23,14 +23,16 @@ private:
 	bool Update();
 	void Render();
 
+	void RenderParticles();
 	void DrawParticle(float x, float y, int size, int color);
 
 	void AddParticle(const float x, const float y, const int c) const;
 	void ClearParticles() const;
 	void UpdateParticles();
-	float Force(float r, float a, float beta = 0.3f);
+	void UpdateParticlesOld();
 
-	static void RenderState(const State&);
+	void GenerateNewConfig();
+
 	static void RenderConfig(Config&, int& currentColor);
 
 	Config& mConfig;

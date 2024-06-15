@@ -2,4 +2,5 @@
 
 #include "State.h"
 
-State generateState(int particlesCount, int colorsCount);
+State generateRandomState(int particlesCount, int colorsCount, int width, int height);
+State generateAllInTheMiddleState(int particlesCount, int colorsCount, int width, int height);
