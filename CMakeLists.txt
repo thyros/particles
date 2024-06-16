@@ -17,7 +17,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${RO
 set_property( DIRECTORY PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}" )
 
 ############################################################################
-# SDL2
+# SDL3
 set(SDL3_INCLUDE_DIRS
     ${ROOT}/external/SDL3/include)
 
@@ -34,7 +34,7 @@ file(COPY ${ROOT}/external/SDL3/bin/SDL3_image.dll DESTINATION ${ROOT})
 ############################################################################
 # ENTT
 set(ENTT_INCLUDE_DIRS
-    ${ROOT}/externals/entt/src)
+    ${ROOT}/external/entt/src)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${ENTT_INCLUDE_DIRS})
 

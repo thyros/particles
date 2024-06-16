@@ -5,7 +5,6 @@ and may not be redistributed without written permission.*/
 #include "IApp.h"
 #include "ConfigFunctions.h"
 #include "StateFunctions.h"
-#include <SDL3/SDL_main.h>
 
 constexpr int SCREEN_WIDTH = 1280;
 constexpr int SCREEN_HEIGHT = 960;

@@ -2,6 +2,7 @@
 
 #include "IApp.h"
 
+
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Surface;
@@ -36,6 +37,8 @@ private:
 
 	Config& mConfig;
 	State& mState;
+
+	// entt::registry mRegistry;
 
 	int mFramesCount = 0;
 	int mLastMeasurement = 0;
