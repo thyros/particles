@@ -235,7 +235,7 @@ void App::Render()
 
 void App::RenderParticles() {
 	for (size_t i = 0; i < mState.colors.size(); ++i) {
-		const Vec& pos = mState.pos[i];
+		const Position& pos = mState.pos[i];
 		const int col = mState.colors[i];
 
 		const float screenX = pos.x;
@@ -258,8 +258,8 @@ void App::DrawParticle(float x, float y, int size, int color)
 void App::AddParticle(const float x, const float y, const int c) const
 {
 	mState.colors.push_back(c);
-	mState.pos.push_back(Vec {.x = x, .y = y} );
-	mState.vel.push_back(Vec {} );
+	mState.pos.push_back(Position {.x = x, .y = y} );
+	mState.vel.push_back(Velocity {} );
 }
 
 void App::ClearParticles() const
@@ -285,7 +285,7 @@ void App::UpdateParticles() {
 				continue;
 			}
 
-			Vec direction = mState.pos[j] - mState.pos[i];
+			Vec direction = Vec {mState.pos[j].x - mState.pos[i].x, mState.pos[j].y - mState.pos[i].y};
 
 			if (direction.x > 0.5f * mWidth) {
 				direction.x -= mWidth;
@@ -324,96 +324,24 @@ void App::UpdateParticles() {
 			}
 		}
 
-		mState.vel[i].mul(mConfig.friction);
-		mState.vel[i].add(totalForce.mul(mConfig.dt));
+		totalForce.mul(mConfig.dt);
+		mState.vel[i].x *= (mConfig.friction);
+		mState.vel[i].y *= (mConfig.friction);
+		mState.vel[i].x += totalForce.x;
+		mState.vel[i].y += totalForce.y;
 
-		mState.pos[i].add(mState.vel[i]);
-		mState.pos[i] = wrap(mState.pos[i], Vec {static_cast<float>(mWidth), static_cast<float>(mHeight)});
+		const auto wrapFloat = [](float v, float l) {
+			if (v < 0) {
+				return v + l;
+			} else if (v > l) {
+				return v - l;
+			}
+			return v;
+		};
+
+		mState.pos[i].x = wrapFloat(mState.pos[i].x + mState.vel[i].x, static_cast<float>(mWidth));
+		mState.pos[i].y = wrapFloat(mState.pos[i].y + mState.vel[i].y, static_cast<float>(mHeight));
 	}	
-
-}
-
-void App::UpdateParticlesOld()
-{
-	const auto Force = [](float r, float a, float beta)
-	{
-		if (r < beta)
-		{
-			return r / beta - 1;
-		}
-		if (beta < r && r < 1)
-		{
-			return a * (1 - std::abs(2 * r - 1 - beta) / (1 - beta));
-		}
-		return 0.0f;
-	};
-
-	// update velocities
-	const size_t count = mState.colors.size();
-	for (size_t i = 0; i < count; ++i)
-	{
-		float totalForceX = 0;
-		float totalForceY = 0;
-
-		for (size_t j = 0; j < count; ++j)
-		{
-			if (i == j)
-				continue;
-
-			constexpr float wrapThreshold = 0.9f;
-			float rx = mState.pos[j].x - mState.pos[i].x;
-			if (rx > wrapThreshold)
-			{
-				rx -= 1.0f;
-			}
-			else if (rx < -wrapThreshold)
-			{
-				rx += 1.0f;
-			}
-
-			float ry = mState.pos[j].y - mState.pos[i].y;
-			if (ry > wrapThreshold)
-			{
-				ry -= 1.0f;
-			}
-			else if (ry < -wrapThreshold)
-			{
-				ry += 1.0f;
-			}
-
-			const float r = Vec{.x = rx, .y = ry}.magnitude();
-			if (r > 0 && r < mConfig.rMax)
-			{
-				const float f = Force(r / mConfig.rMax, mConfig.matrix[mState.colors[i]][mState.colors[j]], 0.3f);
-				totalForceX += rx / r * f;
-				totalForceY += ry / r * f;
-			}
-		}
-
-		totalForceX *= mConfig.rMax * mConfig.forceFactor;
-		totalForceY *= mConfig.rMax * mConfig.forceFactor;
-
-		mState.vel[i].mul(mConfig.frictionFactor);
-
-		mState.vel[i].add(Vec{.x = totalForceX * mConfig.dt, .y = totalForceY * mConfig.dt});
-	}
-
-	// update positions
-	for (size_t i = 0; i < count; ++i)
-	{
-		mState.pos[i].add(Vec{.x = mState.vel[i].x * mConfig.dt, .y = mState.vel[i].y * mConfig.dt});
-		mState.pos[i].x = warp(mState.pos[i].x);
-		mState.pos[i].y = warp(mState.pos[i].y);
-	}
-
-	// render
-	for (size_t i = 0; i < count; ++i)
-	{
-		const float screenX = mState.pos[i].x;
-		const float screenY = mState.pos[i].y;
-
-		DrawParticle(screenX, screenY, mConfig.particleSize, mState.colors[i]);
-	}
 }
 
 void App::RenderConfig(Config &config, int &currentColor)
