@@ -1,6 +1,7 @@
 #include "App.h"
 #include "ConfigFunctions.h"
 #include "Math.h"
+#include "QuadTree.h"
 #include "Vec.h"
 
 #include <backends/imgui_impl_sdl3.h>
@@ -204,8 +205,7 @@ bool App::Update()
 		}
 	}
 
-	UpdateParticles();
-	// UpdateParticlesOld();
+	UpdateParticlesBruteForce();
 
 	return false;
 }
@@ -278,7 +278,7 @@ void App::GenerateNewConfig() {
 	mConfig.radii = generateRadii(mConfig.colorsCount);
 }
 
-void App::UpdateParticles() {
+void App::UpdateParticlesBruteForce() {
 	const size_t count = mState.colors.size();
 	for (size_t i = 0; i < count; ++i) {
 		Vec totalForce;
@@ -289,6 +289,83 @@ void App::UpdateParticles() {
 			}
 
 			Vec direction = Vec {mState.pos[j].x - mState.pos[i].x, mState.pos[j].y - mState.pos[i].y};
+
+			if (direction.x > 0.5f * mWidth) {
+				direction.x -= mWidth;
+			} else if (direction.x < -0.5f * mWidth) {
+				direction.x += mWidth;
+			}
+			if (direction.y > 0.5f * mHeight) {
+				direction.y -= mHeight;
+			} else if (direction.y < -0.5f * mHeight) {
+				direction.y += mHeight;
+			}
+
+			const float distance = direction.magnitude();
+			direction.normalize();
+
+			const int c1 = mState.colors[i];
+			const int c2 = mState.colors[j];
+			if (distance < mConfig.minDistances[c1][c2]) {
+				float factor = std::abs(mConfig.forces[c1][c2]) * -3;
+				factor *= map(distance, 0, mConfig.minDistances[c1][c2], 1, 0);
+				factor *= mConfig.k;
+
+				Vec force = distance != 0 ? direction : randomVec();
+				force.mul(factor);
+				totalForce.add(force);
+			}
+
+			if (distance < mConfig.radii[c1][c2]) {
+				float factor = mConfig.forces[c1][c2];
+				factor *= map(distance, 0, mConfig.radii[c1][c2], 1, 0);
+				factor *= mConfig.k;
+
+				Vec force = distance != 0 ? direction : randomVec();
+				force.mul(factor);
+				totalForce.add(force);
+			}
+		}
+
+		totalForce.mul(mConfig.dt);
+		mState.vel[i].x *= (mConfig.friction);
+		mState.vel[i].y *= (mConfig.friction);
+		mState.vel[i].x += totalForce.x;
+		mState.vel[i].y += totalForce.y;
+
+		const auto wrapFloat = [](float v, float l) {
+			if (v < 0) {
+				return v + l;
+			} else if (v > l) {
+				return v - l;
+			}
+			return v;
+		};
+
+		mState.pos[i].x = wrapFloat(mState.pos[i].x + mState.vel[i].x, static_cast<float>(mWidth));
+		mState.pos[i].y = wrapFloat(mState.pos[i].y + mState.vel[i].y, static_cast<float>(mHeight));
+	}	
+}
+
+void App::UpdateParticlesQuadTree() {
+	const size_t count = mState.colors.size();
+
+	const float hw = mWidth / 2.0f;
+	const float hh = mHeight / 2.0f;
+	QuadTree quadtree(Boundry{.x = hw, .y = hh, .width = hw, .height = hh}, 4);
+	for (const Position&p: mState.pos) {
+		quadtree.insert(p);
+	}
+
+	for (size_t i = 0; i < count; ++i) {
+		Vec totalForce;
+
+		const float radius = 250;
+		std::vector<Position> neighbours;
+		quadtree.query(Boundry{.x = mState.pos[i].x, .y = mState.pos[i].y, .width = radius, .height = radius}, neighbours);
+
+		for (const Position& p: neighbours) {
+			Vec direction = Vec {p.x - mState.pos[i].x, p.y - mState.pos[i].y};
 
 			if (direction.x > 0.5f * mWidth) {
 				direction.x -= mWidth;

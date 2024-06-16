@@ -29,7 +29,7 @@ private:
 
 	void AddParticle(const float x, const float y, const int c) const;
 	void ClearParticles() const;
-	void UpdateParticles();
+	void UpdateParticlesBruteForce();
 
 	void GenerateNewConfig();
 
