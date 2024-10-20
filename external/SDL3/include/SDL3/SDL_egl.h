@@ -19,13 +19,11 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/**
- *  \file SDL_egl.h
- *
- *  This is a simple file to encapsulate the EGL API headers.
+/*
+ * This is a simple file to encapsulate the EGL API headers.
  */
 
-#include "SDL_platform_defines.h"
+#include <SDL3/SDL_platform_defines.h>
 
 #if !defined(_MSC_VER) && !defined(SDL_PLATFORM_ANDROID) && !defined(SDL_USE_BUILTIN_OPENGL_DEFINITIONS)
 

@@ -1,6 +1,7 @@
-SDL commit aba3038353e0fcf2e91581ce6b81b33f0f70c392 
-SDL_image commit 87c811f597f9e8b881bdf9faeab344481ae2a77e 
-SDL_mixer commit 0238375811c54f4ccebc6212bab66d89fa45f4d3 
-SDL_ttf commit f401d2961e4cc98ef07664f8a13214ce19f1c62e 
-SDL_rtf commit f4dcc447253e37732255000b6bcab79bfa41701c 
-SDL_net commit b2ca02cfd9e0fe5c05bd6b0523c779b35e76772c 
+SDL         b641c2a0db26127f3e379f8b92bc15feb500e242          
+SDL_image   a010117fee88255a32492ae9a43e93a213d608ec   
+SDL_mixer   f3318efa16ecc2f5a3beec8a004b9cbc4cd38d40   
+SDL_ttf     45faf5a38bd8f9319ac0fe66cfcc4ceb192f9fa4     
+SDL_rtf     6ce99a0d2808b73913150ef6812d06f6a50a4eeb     
+SDL_net     edcf67db96e9e65c372e03955369eb6796bb6b05     
+SDL2_compat eb354ace07ad23477946e7eff68d91197f3a7d2e 

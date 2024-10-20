@@ -8,7 +8,7 @@ Release: [2024-01-27](https://github.com/mmozeiko/build-sdl3/releases/tag/2024-0
 
 ## IMGUI
 
-Release: [v1.90.1](https://github.com/ocornut/imgui/releases/tag/v1.90.1)
+Release: [v1.91.4-docking](https://github.com/ocornut/imgui/releases/tag/v1.91.4-docking)
 
 ## entt
 

@@ -32,46 +32,40 @@
 extern "C" {
 #endif
 
-/* Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
-*/
+/**
+ * Printable format: "%d.%d.%d", MAJOR, MINOR, MICRO
+ */
 #define SDL_RTF_MAJOR_VERSION   3
 #define SDL_RTF_MINOR_VERSION   0
-#define SDL_RTF_PATCHLEVEL      0
-
-/* This macro can be used to fill a version structure with the compile-time
- * version of the SDL_rtf library.
- */
-#define SDL_RTF_VERSION(X)                          \
-{                                                   \
-        (X)->major = SDL_RTF_MAJOR_VERSION;         \
-        (X)->minor = SDL_RTF_MINOR_VERSION;         \
-        (X)->patch = SDL_RTF_PATCHLEVEL;            \
-}
-
-/* Backwards compatibility */
-#define RTF_MAJOR_VERSION       SDL_RTF_MAJOR_VERSION
-#define RTF_MINOR_VERSION       SDL_RTF_MINOR_VERSION
-#define RTF_PATCHLEVEL          SDL_RTF_PATCHLEVEL
-#define RTF_VERSION(X)          SDL_RTF_VERSION(X)
+#define SDL_RTF_MICRO_VERSION   0
 
 /**
- * Query the version of SDL_rtf that the program is linked against.
- *
+ * This is the version number macro for the current SDL_rtf version.
+ */
+#define SDL_RTF_VERSION \
+    SDL_VERSIONNUM(SDL_RTF_MAJOR_VERSION, SDL_RTF_MINOR_VERSION, SDL_RTF_MICRO_VERSION)
+
+/**
+ * This macro will evaluate to true if compiled with SDL_rtf at least X.Y.Z.
+ */
+#define SDL_RTF_VERSION_ATLEAST(X, Y, Z) \
+    ((SDL_RTF_MAJOR_VERSION >= X) && \
+     (SDL_RTF_MAJOR_VERSION > X || SDL_RTF_MINOR_VERSION >= Y) && \
+     (SDL_RTF_MAJOR_VERSION > X || SDL_RTF_MINOR_VERSION > Y || SDL_RTF_MICRO_VERSION >= Z))
+
+/**
  * This function gets the version of the dynamically linked SDL_rtf library.
- * This is separate from the SDL_RTF_VERSION() macro, which tells you what
- * version of the SDL_rtf headers you compiled against.
  *
- * This returns static internal data; do not free or modify it!
- *
- * \returns a pointer to the version information.
+ * \returns SDL_rtf version.
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC const SDL_version * SDLCALL RTF_Linked_Version(void);
+extern SDL_DECLSPEC int SDLCALL RTF_Version(void);
+
 
 typedef struct _RTF_Context RTF_Context;
 
-typedef enum
+typedef enum RTF_FontFamily
 {
     RTF_FontDefault,    /* Unknown or default font */
     RTF_FontRoman,      /* Proportionally spaced serif fonts,
@@ -88,7 +82,7 @@ typedef enum
 }
 RTF_FontFamily;
 
-typedef enum
+typedef enum RTF_FontStyle
 {
     RTF_FontNormal    = 0x00,
     RTF_FontBold      = 0x01,
@@ -141,7 +135,7 @@ typedef struct _RTF_FontEngine
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC RTF_Context * SDLCALL RTF_CreateContext(SDL_Renderer *renderer, RTF_FontEngine *fontEngine);
+extern SDL_DECLSPEC RTF_Context * SDLCALL RTF_CreateContext(SDL_Renderer *renderer, RTF_FontEngine *fontEngine);
 
 /**
  * Set the text of an RTF context, with data loaded from a filename.
@@ -153,31 +147,34 @@ extern DECLSPEC RTF_Context * SDLCALL RTF_CreateContext(SDL_Renderer *renderer, 
  *
  * \param ctx the RTF context to update.
  * \param file the file path to load RTF data from.
- * \returns 0 on success, -1 on failure.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC int SDLCALL RTF_Load(RTF_Context *ctx, const char *file);
+extern SDL_DECLSPEC bool SDLCALL RTF_Load(RTF_Context *ctx, const char *file);
 
 /**
- * Set the text of an RTF context, with data loaded from an SDL_RWops.
+ * Set the text of an RTF context, with data loaded from an SDL_IOStream.
  *
  * This can be called multiple times to change the text displayed.
  *
- * If `freesrc` is non-zero, this function will close/free `src`, whether this
- * function succeeded or not.
+ * If `closeio` is true, this function will close `src`, whether this function
+ * succeeded or not.
  *
  * On failure, call RTF_GetError() to get a human-readable text message
  * corresponding to the error.
  *
  * \param ctx the RTF context to update.
- * \param src the SDL_RWops to load RTF data from.
- * \param freesrc non-zero to close/free `src`, zero to leave open.
- * \returns 0 on success, -1 on failure.
+ * \param src the SDL_IOStream to load RTF data from.
+ * \param closeio true to close `src` when the font is closed, false to leave
+ *                it open.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC int SDLCALL RTF_Load_RW(RTF_Context *ctx, SDL_RWops *src, int freesrc);
+extern SDL_DECLSPEC bool SDLCALL RTF_Load_IO(RTF_Context *ctx, SDL_IOStream *src, bool closeio);
 
 /**
  * Get the title of an RTF document.
@@ -191,7 +188,7 @@ extern DECLSPEC int SDLCALL RTF_Load_RW(RTF_Context *ctx, SDL_RWops *src, int fr
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC const char * SDLCALL RTF_GetTitle(RTF_Context *ctx);
+extern SDL_DECLSPEC const char * SDLCALL RTF_GetTitle(RTF_Context *ctx);
 
 /**
  * Get the subject of an RTF document.
@@ -205,7 +202,7 @@ extern DECLSPEC const char * SDLCALL RTF_GetTitle(RTF_Context *ctx);
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC const char * SDLCALL RTF_GetSubject(RTF_Context *ctx);
+extern SDL_DECLSPEC const char * SDLCALL RTF_GetSubject(RTF_Context *ctx);
 
 /**
  * Get the author of an RTF document.
@@ -219,7 +216,7 @@ extern DECLSPEC const char * SDLCALL RTF_GetSubject(RTF_Context *ctx);
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC const char * SDLCALL RTF_GetAuthor(RTF_Context *ctx);
+extern SDL_DECLSPEC const char * SDLCALL RTF_GetAuthor(RTF_Context *ctx);
 
 /**
  * Get the height of an RTF render area given a certain width.
@@ -233,7 +230,7 @@ extern DECLSPEC const char * SDLCALL RTF_GetAuthor(RTF_Context *ctx);
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC int SDLCALL RTF_GetHeight(RTF_Context *ctx, int width);
+extern SDL_DECLSPEC int SDLCALL RTF_GetHeight(RTF_Context *ctx, int width);
 
 /**
  * Render the RTF document to a rectangle in an SDL_Renderer.
@@ -250,7 +247,7 @@ extern DECLSPEC int SDLCALL RTF_GetHeight(RTF_Context *ctx, int width);
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC void SDLCALL RTF_Render(RTF_Context *ctx, SDL_Rect *rect, int yOffset);
+extern SDL_DECLSPEC void SDLCALL RTF_Render(RTF_Context *ctx, SDL_Rect *rect, int yOffset);
 
 /**
  * Free an RTF display context.
@@ -265,11 +262,7 @@ extern DECLSPEC void SDLCALL RTF_Render(RTF_Context *ctx, SDL_Rect *rect, int yO
  *
  * \since This function is available since SDL_rtf 3.0.0.
  */
-extern DECLSPEC void SDLCALL RTF_FreeContext(RTF_Context *ctx);
-
-/* We'll use SDL for reporting errors */
-#define RTF_SetError    SDL_SetError
-#define RTF_GetError    SDL_GetError
+extern SDL_DECLSPEC void SDLCALL RTF_FreeContext(RTF_Context *ctx);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
