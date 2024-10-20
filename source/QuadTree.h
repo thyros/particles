@@ -45,10 +45,10 @@ public:
                 subdivide();
             }
 
-            mNorthEast.insert(point);
-            mNorthWest.insert(point);
-            mSouthEast.insert(point);
-            mSouthWest.insert(point);
+            mNorthEast->insert(point);
+            mNorthWest->insert(point);
+            mSouthEast->insert(point);
+            mSouthWest->insert(point);
         }
     }
 
@@ -59,20 +59,18 @@ public:
             return;
         }
 
-        for (const Position &p, mPoints)
-        {
-            if (Contains(boundry, p))
-            {
+        for (const Position& p: mPoints) {
+            if (Contains(boundry, p)) {
                 found.push_back(p);
             }
         }
 
         if (mDivided)
         {
-            mNorthEast.query(boundry, found);
-            mNorthWest.query(boundry, found);
-            mSouthEast.query(boundry, found);
-            mSouthWest.query(boundry, found);
+            mNorthEast->query(boundry, found);
+            mNorthWest->query(boundry, found);
+            mSouthEast->query(boundry, found);
+            mSouthWest->query(boundry, found);
         }
     }
 

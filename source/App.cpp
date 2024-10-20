@@ -22,7 +22,7 @@ std::unique_ptr<IApp> CreateApp(Config &config, State &state, int16_t width, int
 {
 	// ####################################
 	// ## SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return nullptr;
@@ -36,7 +36,7 @@ std::unique_ptr<IApp> CreateApp(Config &config, State &state, int16_t width, int
 		return nullptr;
 	}
 
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr, SDL_RENDERER_ACCELERATED);
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
 	if (renderer == nullptr)
 	{
 		printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
@@ -50,9 +50,6 @@ std::unique_ptr<IApp> CreateApp(Config &config, State &state, int16_t width, int
 		return nullptr;
 	}
 	SDL_Texture *spriteTexture = SDL_CreateTextureFromSurface(renderer, surface);
-
-	Uint32 format;
-	SDL_QueryTexture(spriteTexture, &format, nullptr, nullptr, nullptr);
 
 	// ####################################
 	// ## IMGUI
@@ -149,7 +146,7 @@ bool App::Update()
 		}
 		if (e.type == SDL_EVENT_KEY_DOWN)
 		{
-			switch (e.key.keysym.sym)
+			switch (e.key.key)
 			{
 			case SDLK_ESCAPE:
 				return true;
@@ -160,14 +157,14 @@ bool App::Update()
 			case SDLK_4:
 			case SDLK_5:
 			case SDLK_6:
-				mCurrentColor = e.key.keysym.sym - SDLK_1;
+				mCurrentColor = e.key.key - SDLK_1;
 				break;
 
 			case SDLK_SPACE:
 				ClearParticles();
 				break;
 
-			case SDLK_z:
+			case SDLK_Z:
 				GenerateNewConfig();
 				break;
 			}			
@@ -232,7 +229,7 @@ void App::Render()
 
 	ImGui::Render();
 
-	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mRenderer);
 	SDL_RenderPresent(mRenderer);
 }
 
@@ -382,7 +379,7 @@ void App::UpdateParticlesQuadTree() {
 			direction.normalize();
 
 			const int c1 = mState.colors[i];
-			const int c2 = mState.colors[j];
+			const int c2 = mState.colors[i];
 			if (distance < mConfig.minDistances[c1][c2]) {
 				float factor = std::abs(mConfig.forces[c1][c2]) * -3;
 				factor *= map(distance, 0, mConfig.minDistances[c1][c2], 1, 0);

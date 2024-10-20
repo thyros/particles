@@ -30,6 +30,7 @@ private:
 	void AddParticle(const float x, const float y, const int c) const;
 	void ClearParticles() const;
 	void UpdateParticlesBruteForce();
+	void UpdateParticlesQuadTree();
 
 	void GenerateNewConfig();
 
