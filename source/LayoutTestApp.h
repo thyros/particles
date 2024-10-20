@@ -13,11 +13,11 @@ using SDL_Surface_Handle = std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)>;
 using SDL_Renderer_Handle = std::unique_ptr<SDL_Renderer, void (*)(SDL_Renderer*)>;
 using SDL_Window_Handle = std::unique_ptr<SDL_Window, void (*)(SDL_Window*)>;
 
-std::unique_ptr<IApp> CreateLayoutTestApp(int16_t width, int16_t height);
+std::unique_ptr<IApp> CreateLayoutTestApp(Config& config, int16_t width, int16_t height);
 
 class LayoutTestApp : public IApp {
 public:
-    LayoutTestApp(int16_t width, int16_t height, SDL_Window_Handle window, SDL_Renderer_Handle renderer, SDL_Surface_Handle surface,
+    LayoutTestApp(Config& config, int16_t width, int16_t height, SDL_Window_Handle window, SDL_Renderer_Handle renderer, SDL_Surface_Handle surface,
 		 SDL_Texture_Handle spriteTexture, SDL_Texture_Handle backBuffer);
     ~LayoutTestApp();
 
@@ -26,9 +26,11 @@ public:
 private:
 	bool Update();
 	void Render();
+    void RenderConfig(Config& config);
 
+    Config& mConfig;
     int16_t mWidth;
-    int16_t mHeight;
+    int16_t mHeight;    
     SDL_Window_Handle mWindow;
     SDL_Renderer_Handle mRenderer;
     SDL_Surface_Handle mSurface;
