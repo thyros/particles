@@ -2,14 +2,17 @@
 
 #include "IApp.h"
 
-struct SDL_Window;
 struct SDL_Renderer;
+struct SDL_Surface;
+struct SDL_Texture;
+struct SDL_Window;
 
 std::unique_ptr<IApp> CreateLayoutTestApp(int16_t width, int16_t height);
 
 class LayoutTestApp : public IApp {
 public:
-    LayoutTestApp(int16_t width, int16_t height, SDL_Window *window, SDL_Renderer *renderer);
+    LayoutTestApp(int16_t width, int16_t height, SDL_Window *window, SDL_Renderer *renderer, SDL_Surface *surface,
+		 SDL_Texture *spriteTexture, SDL_Texture *backBuffer);
     ~LayoutTestApp();
 
 	void Run() override;
@@ -22,4 +25,7 @@ private:
     int16_t mHeight;
     SDL_Window* mWindow;
     SDL_Renderer* mRenderer;
+    SDL_Surface* mSurface;
+    SDL_Texture* mSpriteTexture;
+    SDL_Texture* mBackBuffer;
 };
