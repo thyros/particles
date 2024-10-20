@@ -52,27 +52,25 @@ std::unique_ptr<IApp> CreateLayoutTestApp(int16_t width, int16_t height) {
     }
 
     constexpr int windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-    SDL_Window *window = SDL_CreateWindow("SDL Tutorial", width, height, windowFlags);
+    SDL_Window_Handle window(SDL_CreateWindow("SDL Tutorial", width, height, windowFlags), SDL_DestroyWindow);
     if(window == nullptr) {
         printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
         return nullptr;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
+    SDL_Renderer_Handle renderer(SDL_CreateRenderer(window.get(), nullptr), SDL_DestroyRenderer);
     if(renderer == nullptr) {
         printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
         return nullptr;
     }
 
-    SDL_Surface *surface = IMG_Load("res/circle.png");
-    if(surface == nullptr) {
+    SDL_Surface_Handle surface(IMG_Load("res/circle.png"), SDL_DestroySurface);
+    if (surface == nullptr) {
         printf("Could not load image");
         return nullptr;
     }
-    SDL_Texture *spriteTexture = SDL_CreateTextureFromSurface(renderer, surface);
-
-    SDL_Texture *backBuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,
-                                                SDL_TEXTUREACCESS_TARGET, width, height);
+    SDL_Texture_Handle spriteTexture(SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture);
+    SDL_Texture_Handle backBuffer(SDL_CreateTexture(renderer.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_TARGET, width, height), SDL_DestroyTexture);
 
     // ####################################
     // ## IMGUI
@@ -87,21 +85,21 @@ std::unique_ptr<IApp> CreateLayoutTestApp(int16_t width, int16_t height) {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
 
-    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer3_Init(renderer);
+    ImGui_ImplSDL3_InitForSDLRenderer(window.get(), renderer.get());
+    ImGui_ImplSDLRenderer3_Init(renderer.get());
 
-    return std::make_unique<LayoutTestApp>(width, height, window, renderer, surface, spriteTexture, backBuffer);
+    return std::make_unique<LayoutTestApp>(width, height, std::move(window), std::move(renderer), std::move(surface), std::move(spriteTexture), std::move(backBuffer));
 }
 
-LayoutTestApp::LayoutTestApp(int16_t width, int16_t height, SDL_Window *window, SDL_Renderer *renderer, SDL_Surface *surface,
-                             SDL_Texture *spriteTexture, SDL_Texture *backBuffer)
+LayoutTestApp::LayoutTestApp(int16_t width, int16_t height, SDL_Window_Handle window, SDL_Renderer_Handle renderer, SDL_Surface_Handle surface,
+                             SDL_Texture_Handle spriteTexture, SDL_Texture_Handle backBuffer)
     : mWidth(width),
       mHeight(height),
-      mWindow(window),
-      mRenderer(renderer),
-      mSurface(surface),
-      mSpriteTexture(spriteTexture),
-      mBackBuffer(backBuffer) {}
+      mWindow(std::move(window)),
+      mRenderer(std::move(renderer)),
+      mSurface(std::move(surface)),
+      mSpriteTexture(std::move(spriteTexture)),
+      mBackBuffer(std::move(backBuffer)) {}
 
 LayoutTestApp::~LayoutTestApp() {
     // ####################################
@@ -112,23 +110,6 @@ LayoutTestApp::~LayoutTestApp() {
 
     // ####################################
     // ## SDL
-    SDL_DestroyTexture(mBackBuffer);
-    mBackBuffer = nullptr;
-
-    SDL_DestroyTexture(mSpriteTexture);
-    mSpriteTexture = nullptr;
-
-    // Deallocate surface
-    SDL_DestroySurface(mSurface);
-    mSurface = nullptr;
-
-    SDL_DestroyRenderer(mRenderer);
-    mRenderer = nullptr;
-
-    // Destroy window
-    SDL_DestroyWindow(mWindow);
-    mWindow = nullptr;
-
     // Quit SDL subsystems
     SDL_Quit();
 }
@@ -160,20 +141,20 @@ bool LayoutTestApp::Update() {
 }
 
 void LayoutTestApp::Render() {
-    SDL_SetRenderTarget(mRenderer, mBackBuffer);
+    SDL_SetRenderTarget(mRenderer.get(), mBackBuffer.get());
 
     constexpr ImVec4 clearColor = ImVec4(0.0f, 0.2f, 0.0f, 1.0f);
-    SDL_SetRenderDrawColor(mRenderer, (Uint8)(clearColor.x * 255), (Uint8)(clearColor.y * 255), (Uint8)(clearColor.z * 255), (Uint8)(clearColor.w * 255));
-    SDL_RenderClear(mRenderer);
+    SDL_SetRenderDrawColor(mRenderer.get(), (Uint8)(clearColor.x * 255), (Uint8)(clearColor.y * 255), (Uint8)(clearColor.z * 255), (Uint8)(clearColor.w * 255));
+    SDL_RenderClear(mRenderer.get());
 
-	DrawFrame(mRenderer);
+	DrawFrame(mRenderer.get());
 
     const int size = 100;
     const int x = 100;
     const int y = 100;
     const float offset = size / 2.0f;
 
-    SDL_SetTextureColorMod(mSpriteTexture, static_cast<char>(255 * 1.0f),
+    SDL_SetTextureColorMod(mSpriteTexture.get(), static_cast<char>(255 * 1.0f),
                            static_cast<char>(255 * 0.5f),
                            static_cast<char>(255 * 0.0f));
 
@@ -182,12 +163,12 @@ void LayoutTestApp::Render() {
                   .w = static_cast<float>(size),
                   .h = static_cast<float>(size)};
 
-    SDL_RenderTexture(mRenderer, mSpriteTexture, nullptr, &dst);
+    SDL_RenderTexture(mRenderer.get(), mSpriteTexture.get(), nullptr, &dst);
 
-    SDL_SetRenderTarget(mRenderer, nullptr);
+    SDL_SetRenderTarget(mRenderer.get(), nullptr);
     constexpr ImVec4 blackColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-    SDL_SetRenderDrawColor(mRenderer, (Uint8)(blackColor.x * 255), (Uint8)(blackColor.y * 255), (Uint8)(blackColor.z * 255), (Uint8)(blackColor.w * 255));
-    SDL_RenderClear(mRenderer);
+    SDL_SetRenderDrawColor(mRenderer.get(), (Uint8)(blackColor.x * 255), (Uint8)(blackColor.y * 255), (Uint8)(blackColor.z * 255), (Uint8)(blackColor.w * 255));
+    SDL_RenderClear(mRenderer.get());
 
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -206,7 +187,7 @@ void LayoutTestApp::Render() {
 
 	const ImVec2 textureOffset = ImVec2{(availableSpace.x - desiredTextureSize.x) / 2, (availableSpace.y - desiredTextureSize.y) / 2};
 	ImGui::SetCursorPos(ImVec2{textureOffset.x, textureOffset.y + titlebarHeight});
-    ImGui::Image((ImTextureID)(intptr_t)mBackBuffer, desiredTextureSize);
+    ImGui::Image((ImTextureID)(intptr_t)mBackBuffer.get(), desiredTextureSize);
 
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -221,6 +202,6 @@ void LayoutTestApp::Render() {
 
     ImGui::Render();
 
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mRenderer);
-    SDL_RenderPresent(mRenderer);
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mRenderer.get());
+    SDL_RenderPresent(mRenderer.get());
 }
