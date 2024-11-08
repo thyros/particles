@@ -1,28 +1,14 @@
 #include "IApp.h"
 #include "ConfigFunctions.h"
-// #include "StateFunctions.h"
-
-constexpr int SCREEN_WIDTH = 1280;
-constexpr int SCREEN_HEIGHT = 960;
-
-// ///////////////////////////////////////////////////////////////
-
-// int main(int argc, char **argv)
-// {
-// 	constexpr int particlesCount = 1000;
-
-// 	State state = generateRandomState(particlesCount, config.colorsCount, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-// 	const std::unique_ptr<IApp> app = CreateApp(config, state, SCREEN_WIDTH, SCREEN_HEIGHT);
-// 	app->Run();
-
-// 	return 0;
-// }
+#include "StateFunctions.h"
 
 #include "LayoutTestApp.h"
 #include <memory>
 
 int main(int argc, char **argv) {
+
+	constexpr int width = 1280;
+	constexpr int height = 960;
 
 	constexpr int colorsCount = 6;
 	Config config;
@@ -33,7 +19,10 @@ int main(int argc, char **argv) {
 	config.forces = generateForces(config.colorsCount);
 	config.radii = generateRadii(config.colorsCount);
 
-	const std::unique_ptr<IApp> app = CreateLayoutTestApp(config, SCREEN_WIDTH, SCREEN_HEIGHT);
+	constexpr int particlesCount = 1;
+	State state = generateRandomState(particlesCount, config.colorsCount, width, height);
+
+	const std::unique_ptr<IApp> app = CreateLayoutTestApp(config, state, width, height);
 
 	app->Run();
 	return 0;

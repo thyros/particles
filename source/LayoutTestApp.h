@@ -13,11 +13,11 @@ using SDL_Surface_Handle = std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)>;
 using SDL_Renderer_Handle = std::unique_ptr<SDL_Renderer, void (*)(SDL_Renderer*)>;
 using SDL_Window_Handle = std::unique_ptr<SDL_Window, void (*)(SDL_Window*)>;
 
-std::unique_ptr<IApp> CreateLayoutTestApp(Config& config, int16_t width, int16_t height);
+std::unique_ptr<IApp> CreateLayoutTestApp(Config& config, State& state, int16_t width, int16_t height);
 
 class LayoutTestApp : public IApp {
 public:
-    LayoutTestApp(Config& config, int16_t width, int16_t height, SDL_Window_Handle window, SDL_Renderer_Handle renderer, SDL_Surface_Handle surface,
+    LayoutTestApp(Config& config, State& state, int16_t width, int16_t height, SDL_Window_Handle window, SDL_Renderer_Handle renderer, SDL_Surface_Handle surface,
 		 SDL_Texture_Handle spriteTexture, SDL_Texture_Handle backBuffer);
     ~LayoutTestApp();
 
@@ -27,8 +27,11 @@ private:
 	bool Update();
 	void Render();
     void RenderConfig(Config& config);
+    void RenderDebugInfo();
+    void RenderParticles();
 
     Config& mConfig;
+    State& mState;
     int16_t mWidth;
     int16_t mHeight;    
     SDL_Window_Handle mWindow;
@@ -36,4 +39,8 @@ private:
     SDL_Surface_Handle mSurface;
     SDL_Texture_Handle mSpriteTexture;
     SDL_Texture_Handle mBackBuffer;
+
+    Position mGameTopLeft{};
+    Position mGameSize{};
+    Position mGamePosition{};
 };

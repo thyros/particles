@@ -20,3 +20,8 @@ struct State
 };
 
 
+inline void AddParticle(State& state, const float x, const float y, const int c) {
+	state.pos.push_back(Position{.x = x, .y = y});
+	state.vel.push_back(Velocity{});
+	state.colors.push_back(c);
+}
